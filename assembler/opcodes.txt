@@ -1,0 +1,13 @@
+ld A, B     ->  0x10
+ld B, A     ->  0x11
+ld A, a8    ->  0x12
+ld B, a8    ->  0x13
+ld a8, A    ->  0x14
+ld a8, B    ->  0x15
+ld A, d8    ->  0x16
+ld B, d8    ->  0x17
+ld a8, d8   ->  0x18
+
+Add A, B    ->  0x20
+Sub A, B    ->  0x30
+

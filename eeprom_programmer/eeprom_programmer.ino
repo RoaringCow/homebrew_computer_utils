@@ -54,7 +54,22 @@ void setup() {
   pinMode(12, OUTPUT);
 
   delay(2000);
-  slow_write_array(0x0, data, 8);
+  
+  unlock_eeprom();
+
+  delay(1000);
+  
+  for (unsigned int x = 0; x <= 0x7FFF; x++) {
+    write_byte(x, 0);
+    delay(10);
+    Serial.print(x);
+    Serial.print("   ");
+    Serial.print(x <= 0x7FFF);
+    Serial.print("   ");
+    Serial.println(0x7FFF);
+    if (x == 0x7FFF) break;
+  }
+
   digitalWrite(12, HIGH);
   
 }
