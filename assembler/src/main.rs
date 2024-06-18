@@ -1,4 +1,4 @@
-use std::io::{BufRead, BufReader};
+use std::io::{BufRead, BufReader, Write};
 use std::fs::File;
 use std::env;
 
@@ -55,7 +55,7 @@ fn main() {
         println!("{}", line);
 
         // match opcode
-        match parts[0] {
+        match parts[0].to_string().to_lowercase().as_str() {
             "ld" => {
                 let operand_one: String = parts[1].to_string().replace(",", "");
                 let operand_two: String = parts[2].to_string().replace(",", "");
@@ -145,4 +145,32 @@ fn main() {
     for byte in binary.iter() {
         println!("{:x}", byte);
     }
+
+
+    let mut output_file = match File::create("output.8bpc") {
+        Ok(file) => file,
+        Err(err) => {
+            eprintln!("Error creating file {}", err);
+            std::process::exit(1);
+        }
+    };
+
+    // write data to file
+    match output_file.write_all(&binary) {
+        Ok(_) => (),
+        Err(err) => {
+            eprintln!("Error writing data to file {}", err);
+            std::process::exit(1);
+        },
+    }
+
+    // ensure data is written
+    match output_file.flush() {
+        Ok(_) => (),
+        Err(err) => eprintln!("Error flushing data {}", err)
+    }
+    println!("Data has been written to output.8bpc");
+    
+
+
 }
