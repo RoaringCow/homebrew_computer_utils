@@ -78,7 +78,7 @@ fn main() {
                         panic!("address to address not yet supported");
                     } else {
                         if operand_two.contains("0x") {
-                            binary.push(0x18);
+                            binary.push(0x10);
                             match u8::from_str_radix(&operand_two.trim_start_matches("0x"), 16){
                                 Ok(v) => {
                                     binary.push(v);
@@ -88,8 +88,8 @@ fn main() {
                             }
                         }else {
                             match operand_two.as_str() {
-                                "A" => binary.push(0x14), // ld a8, a
-                                "B" => binary.push(0x15),
+                                "A" => binary.push(0x07), // ld a8, a
+                                "B" => binary.push(0x08),
                                 _ => panic!("that source operand is not supported or invalid"),
                             } 
                         }
@@ -101,8 +101,8 @@ fn main() {
                 } else {
                     if let Some(source) = source_str {
                         match operand_one.as_str() {
-                            "A" => binary.push(0x12),
-                            "B" => binary.push(0x13),
+                            "A" => binary.push(0x05),
+                            "B" => binary.push(0x06),
                             _ => panic!("that source operand is not supported or invalid"),
                         }
                         match u8::from_str_radix(source.trim_start_matches("0x"), 16){
@@ -112,8 +112,8 @@ fn main() {
                     }else {
                         if operand_two.contains("0x"){
                             match operand_one.as_str() {
-                                "A" => binary.push(0x16),
-                                "B" => binary.push(0x17),
+                                "A" => binary.push(0x09),
+                                "B" => binary.push(0x0A),
                                 _ => panic!("that source operand is not supported or invalid"),
                             }
                             match u8::from_str_radix(&operand_two.trim_start_matches("0x"), 16) {
@@ -123,8 +123,8 @@ fn main() {
 
                         }else {
                             match operand_one.as_str() {
-                                "A" => binary.push(0x10),
-                                "B" => binary.push(0x11),
+                                "A" => binary.push(0x03),
+                                "B" => binary.push(0x04),
                                 _ => panic!("idk what you're doing but dont do that look at the syntax docs"),
                             }
                         }
@@ -133,11 +133,11 @@ fn main() {
             },
             "add" => {
                 // there is only one instruction on this
-                binary.push(0x20);
+                binary.push(0x16);
             },
             "sub" => {
                 // also only one instruction
-                binary.push(0x30);
+                binary.push(0x17);
             },
             _ => panic!("my shitty assembler didnt understand your instruction"),
         }

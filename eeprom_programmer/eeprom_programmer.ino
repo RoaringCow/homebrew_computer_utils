@@ -1,131 +1,161 @@
+#define SHIFT_DATA 2
+#define SHIFT_CLK 4
+#define SHIFT_LATCH 3
+#define EEPROM_D0 5
+#define EEPROM_D7 12
+#define WRITE_EN 13
 
-// ----- shift register pins -----
-#define address_SRCLK_pin 3// data shifting
-#define address_SER_pin 2 // serial input
+// author: Ben Eater (thanks)
+// i just outsourced it because mine wasnt stable
 
-#define data_SRCLK_pin 7   // data shifting
-#define data_SER_pin 8   // serial input
+/*
+ * Output the address bits and outputEnable signal using shift registers.
+ */
+void setAddress(int address, bool outputEnable) {
+  shiftOut(SHIFT_DATA, SHIFT_CLK, MSBFIRST, (address >> 8) | (outputEnable ? 0x00 : 0x80));
+  shiftOut(SHIFT_DATA, SHIFT_CLK, MSBFIRST, address);
 
-// common
-#define output_enable_pin 4 // G
-#define RCLK_pin 5         // put the contents to output register
-#define SRCLR_pin 6        // clear the registers
-
-
-#define ADDRESS_LEN 15
-#define DATA_LEN 8
-// --------------------------------
-
-// EEPROM control pins
-#define eeprom_write_enable 9
-#define eeprom_output_enable 10
-#define eeprom_chip_enable 11
-
-
-byte data[8] = {0b01010101, 0b10101010, 0b11001100, 0b00110011, 0b11110000, 0b00001111, 0b10010010, 0b10000001}; 
-void setup() {
-  // set the pins
-  pinMode(address_SRCLK_pin, OUTPUT);
-  pinMode(address_SER_pin, OUTPUT);
-  pinMode(data_SRCLK_pin, OUTPUT);
-  pinMode(data_SER_pin, OUTPUT);
-  pinMode(output_enable_pin, OUTPUT);
-  pinMode(RCLK_pin, OUTPUT);
-  pinMode(SRCLR_pin, OUTPUT);
-
-  digitalWrite(output_enable_pin, LOW);
-  digitalWrite(SRCLR_pin, HIGH);
-
-  pinMode(eeprom_write_enable, OUTPUT);
-  pinMode(eeprom_output_enable, OUTPUT);
-  pinMode(eeprom_chip_enable, OUTPUT);
-
-  digitalWrite(eeprom_chip_enable, LOW); // LOW enables, HIGH disables for these enable pins
-  digitalWrite(eeprom_output_enable, HIGH); // disable on start
-  digitalWrite(eeprom_write_enable, HIGH); // disable on start
+  digitalWrite(SHIFT_LATCH, LOW);
+  digitalWrite(SHIFT_LATCH, HIGH);
+  digitalWrite(SHIFT_LATCH, LOW);
+}
 
 
-  // read mode -> OE: LOW, CE: LOW, WE: HIGH 
-  // write mode-> 
+#define CE 0b1000000000000000 // Counter enable
+#define RI 0b0100000000000000 // RAM in
+#define RO 0b0010000000000000 // RAM out
+#define II 0b0001000000000000 // Instruction register in
+#define EO 0b0000100000000000 // EEPROM OUT
+#define AddrI 0b0000010000000000 // Address in
+#define SO 0b0000001000000000 // sum out
+#define AO 0b0000000100000000 // A register in
+//---------------------------
+#define BO 0b0000000010000000 // B register out
+#define AI 0b0000000001000000 // A register in
+#define SF 0b0000000000100000 // subtract flag
+#define BI 0b0000000000010000 // B register in
+/*
+ * Read a byte from the EEPROM at the specified address.
+ */
+byte readEEPROM(int address) {
+  for (int pin = EEPROM_D0; pin <= EEPROM_D7; pin += 1) {
+    pinMode(pin, INPUT);
+  }
+  setAddress(address, /*outputEnable*/ true);
 
-  Serial.begin(9600);
+  byte data = 0;
+  for (int pin = EEPROM_D7; pin >= EEPROM_D0; pin -= 1) {
+    data = (data << 1) + digitalRead(pin);
+  }
+  delay(1);
+  return data;
+}
 
-  
-  pinMode(12, OUTPUT);
 
-  delay(2000);
-  
-  unlock_eeprom();
-
-  delay(1000);
-  
-  for (unsigned int x = 0; x <= 0x7FFF; x++) {
-    write_byte(x, 0);
-    delay(10);
-    Serial.print(x);
-    Serial.print("   ");
-    Serial.print(x <= 0x7FFF);
-    Serial.print("   ");
-    Serial.println(0x7FFF);
-    if (x == 0x7FFF) break;
+/*
+ * Write a byte to the EEPROM at the specified address.
+ */
+void writeEEPROM(int address, byte data) {
+  setAddress(address, /*outputEnable*/ false);
+  for (int pin = EEPROM_D0; pin <= EEPROM_D7; pin += 1) {
+    pinMode(pin, OUTPUT);
   }
 
-  digitalWrite(12, HIGH);
-  
-}
-
-void loop() {
-  /*
-  load_data_into_pins(0b10101010);
-  delay(1000);
-  load_data_into_pins(0b01010101);
-  delay(1000);
-  */
-}
-
-void slow_write_array(uint16_t start_address, byte array[], int array_size) {
-  for (int x = 0; x < array_size; x++) {
-    write_byte(start_address + x, array[x]);
+  for (int pin = EEPROM_D0; pin <= EEPROM_D7; pin += 1) {
+    digitalWrite(pin, data & 1);
+    data = data >> 1;
   }
+  digitalWrite(WRITE_EN, LOW);
+  delayMicroseconds(1);
+  digitalWrite(WRITE_EN, HIGH);
+  delay(10);
 }
 
-void write_byte(uint16_t address, uint8_t data) {
-  // load necesarry things into shift registers
-  digitalWrite(RCLK_pin, LOW); // latch data to output
-  load_address_into_pins(address);
-  load_data_into_pins(data);
-  digitalWrite(RCLK_pin, HIGH);
 
-  // initiate write operation
-  digitalWrite(eeprom_chip_enable, LOW);
-  digitalWrite(eeprom_write_enable, LOW);
-  digitalWrite(eeprom_output_enable, HIGH);
+/*
+ * Read the contents of the EEPROM and print them to the serial monitor.
+ */
+void printContents() {
+  for (int base = 0; base <= 0x2FF; base += 16) {
+    byte data[16];
+    for (int offset = 0; offset <= 15; offset += 1) {
+      data[offset] = readEEPROM(base + offset);
+    }
 
-  delayMicroseconds(150);
+    char buf[80];
+    sprintf(buf, "%03x:  %02x %02x %02x %02x %02x %02x %02x %02x   %02x %02x %02x %02x %02x %02x %02x %02x",
+            base, data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7],
+            data[8], data[9], data[10], data[11], data[12], data[13], data[14], data[15]);
 
-  digitalWrite(eeprom_write_enable, HIGH);  // Disable write
+    Serial.println(buf);
+  }
 }
 
 void unlock_eeprom() {
-  // holy shit it actually worked
-  write_byte(0x5555, 0xAA);
-  write_byte(0x2AAA, 0x55);
-  write_byte(0x5555, 0x80);
-  write_byte(0x5555, 0xAA);
-  write_byte(0x2AAA, 0x55);
-  write_byte(0x5555, 0x20);
-  write_byte(0x5555, 0xAA);
-  write_byte(0xFFFF, 0xAA);
+  writeEEPROM(0x5555, 0xAA);
+  writeEEPROM(0x2AAA, 0x55);
+  writeEEPROM(0x5555, 0x80);
+  writeEEPROM(0x5555, 0xAA);
+  writeEEPROM(0x2AAA, 0x55);
+  writeEEPROM(0x5555, 0x20);
+  writeEEPROM(0x5555, 0xAA);
+  writeEEPROM(0xFFFF, 0xAA);
+
 }
 
-void load_address_into_pins(uint16_t address) {
-  shiftOut(address_SER_pin, address_SRCLK_pin, MSBFIRST, highByte(address));
 
-  shiftOut(address_SER_pin, address_SRCLK_pin, MSBFIRST, lowByte(address));
+void setup() {
+  // put your setup code here, to run once:
+  pinMode(SHIFT_DATA, OUTPUT);
+  pinMode(SHIFT_CLK, OUTPUT);
+  pinMode(SHIFT_LATCH, OUTPUT);
+  digitalWrite(WRITE_EN, HIGH);
+  pinMode(WRITE_EN, OUTPUT);
+  //unlock_eeprom();
+  Serial.begin(9600);  // Start serial communication at 9600 baud rate
+    while (!Serial) {
+        ; // Wait for the serial port to connect. Needed for native USB
+    }
 
-  // moved RCLK pin pulse to write_byte
+  // Erase entire EEPROM
+  Serial.println("Erasing EEPROM");
+  for (uint32_t address = 0; address <= 0x7FFF; address += 1) {
+    writeEEPROM(address, 0x0);
+
+    if (address % 0x8F == 0) {
+      Serial.print("%");
+      Serial.println((address / 32768.0) * 100);
+    }
+  }
+  Serial.println(" done");
+/*
+
+  // Program data bytes
+  Serial.print("Programming EEPROM");
+  for (int address = 0; address < sizeof(data); address += 1) {
+    writeEEPROM(address, data[address]);
+
+    if (address % 0x8F == 0) {
+      Serial.print("%");
+      Serial.println((address / 32768.0) * 100);
+    }
+  }
+  Serial.println(" done");
+
+*/
+  // Read and print out the contents of the EERPROM
+  Serial.println("Reading EEPROM");
+  printContents();
+
+
 }
 
-void load_data_into_pins(uint8_t value) {
-  shiftOut(data_SER_pin, data_SRCLK_pin, MSBFIRST, value);
+int a = 0;
+void loop() {
+  /*
+  if (Serial.available()) {
+    byte receivedData = Serial.read();
+    writeEEPROM(a++, receivedData);
+  }
+  */
 }
