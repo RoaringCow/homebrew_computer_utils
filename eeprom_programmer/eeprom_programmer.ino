@@ -130,6 +130,7 @@ void setup() {
         ; // Wait for the serial port to connect. Needed for native USB
     }
 
+/*
   // Erase entire EEPROM
   Serial.println("Erasing EEPROM");
   for (uint32_t address = 0; address <= 0x7FFF; address += 1) {
@@ -143,7 +144,6 @@ void setup() {
   Serial.println(" done");
 
   check_reset();
-/*
   // Program data bytes
   Serial.print("Programming EEPROM");
   for (int address = 0; address < sizeof(data); address += 1) {
@@ -154,15 +154,19 @@ void setup() {
       Serial.println((address / 32768.0) * 100);
     }
   }
-  Serial.println(" done");
 
   // Read and print out the contents of the EERPROM
   Serial.println("Reading EEPROM");
   printContents();
+  write_microcodes(false);
 */
-  write_microcodes(true);
+  writeEEPROM(0, 0x09);
+  writeEEPROM(1, 0x55);
+  writeEEPROM(2, 0x0a);
+  writeEEPROM(3, 0x11);
 
 
+  Serial.println(" done");
 }
 
 uint16_t a = 0;
