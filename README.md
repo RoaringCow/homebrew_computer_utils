@@ -1,2 +1,24 @@
 # Utilities for my homebrew 8 bit computer.
 - EEPROM programmer (you have to configure the pins yourself)
+
+
+
+This is the computer that i built which was inspired by [Ben Eater][https://eater.net/]:
+I did some customizations on the design which was shaped by the parts that i could get or 
+
+# Specs:
+- 2 8-bit registers
+- 4 bit memory address register (soon to be upgraded to 16 bits)
+- 8 bit memory
+- 15 bit program counter (8 bit word size for eeprom)
+- ALU supports only add and subtract
+- i dont know the clock speed (it currently has a chonk capacitor and it is slow)
+  
+# Todo Specs:
+- Flag Register
+- Conditional Jumps
+- Reset
+- Clock speed adjusting with potantiometers
+
+
+![IMG_8756](https://github.com/RoaringCow/homebrew_computer_utils/assets/99341198/fddc9713-ea90-4bbd-b9d2-2e4dd6e442bb)
