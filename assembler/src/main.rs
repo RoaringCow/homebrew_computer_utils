@@ -147,7 +147,7 @@ fn main() {
     }
 
 
-    let mut output_file = match File::create("output.8bpc") {
+    let mut output_file = match File::create("output.bin") {
         Ok(file) => file,
         Err(err) => {
             eprintln!("Error creating file {}", err);
@@ -169,7 +169,7 @@ fn main() {
         Ok(_) => (),
         Err(err) => eprintln!("Error flushing data {}", err)
     }
-    println!("Data has been written to output.8bpc");
+    println!("Data has been written to output.bin");
     
 
 

@@ -7,6 +7,8 @@
 
 // author: Ben Eater (thanks)
 // i just outsourced it because mine wasnt stable
+// i also did some customizations but the foundation is made by Ben Eater
+
 
 /*
  * Output the address bits and outputEnable signal using shift registers.
@@ -75,8 +77,8 @@ void writeEEPROM(int address, byte data) {
 /*
  * Read the contents of the EEPROM and print them to the serial monitor.
  */
-void printContents() {
-  for (int base = 0; base <= 0x2FF; base += 16) {
+void printContents(int lines_to_print) {
+  for (int base = 0x0; base <= lines_to_print; base += 16) {
     byte data[16];
     for (int offset = 0; offset <= 15; offset += 1) {
       data[offset] = readEEPROM(base + offset);
@@ -89,6 +91,16 @@ void printContents() {
 
     Serial.println(buf);
   }
+}
+void check_reset() {
+  for (uint32_t x = 0; x < 0x8000; x++) {
+    if (readEEPROM(x) != 0) {
+      Serial.print("oh shit not good at:  ");
+      Serial.println(x, HEX);
+    }
+  }
+
+  Serial.println("all done on reset check");
 }
 
 void unlock_eeprom() {
@@ -104,6 +116,7 @@ void unlock_eeprom() {
 }
 
 
+byte data[] = {0x9, 0x55, 0xa, 0x11};
 void setup() {
   // put your setup code here, to run once:
   pinMode(SHIFT_DATA, OUTPUT);
@@ -120,7 +133,7 @@ void setup() {
   // Erase entire EEPROM
   Serial.println("Erasing EEPROM");
   for (uint32_t address = 0; address <= 0x7FFF; address += 1) {
-    writeEEPROM(address, 0x0);
+    writeEEPROM(address, 0x00);
 
     if (address % 0x8F == 0) {
       Serial.print("%");
@@ -128,8 +141,9 @@ void setup() {
     }
   }
   Serial.println(" done");
-/*
 
+  check_reset();
+/*
   // Program data bytes
   Serial.print("Programming EEPROM");
   for (int address = 0; address < sizeof(data); address += 1) {
@@ -142,20 +156,83 @@ void setup() {
   }
   Serial.println(" done");
 
-*/
   // Read and print out the contents of the EERPROM
   Serial.println("Reading EEPROM");
   printContents();
+*/
+  write_microcodes(true);
 
 
 }
 
-int a = 0;
+uint16_t a = 0;
 void loop() {
   /*
   if (Serial.available()) {
     byte receivedData = Serial.read();
     writeEEPROM(a++, receivedData);
+    
+    // Send back the received byte for confirmation
+    Serial.write(receivedData);
   }
   */
 }
+
+
+
+void write_microcodes(bool mode){
+
+  // set fetcher
+  Serial.println("Setting Fetcher");
+  for (int x = 0; x < 0x100; x++) {
+    writeEEPROM(x, mode ? 0x18: 0x0);
+    writeEEPROM(0b100000000 | x, mode ? 0x80: 0x0);
+  }
+
+
+  int instr0[] = {0, 0, 0, 0, 0, 0, 0, 0}; // halt
+  int instr1[] = {0x1800, 0x8000, 0x00c0, 0, 0, 0, 0, 0}; //ld A, B    0x03
+  int instr2[] = {0x1800, 0x8000, 0x0110, 0, 0, 0, 0, 0}; //ld B, A    0x04
+  int instr3[] = {0x1800, 0x8000, 0x0c00, 0x2040, 0x8000, 0, 0, 0}; //ld A, a8   0x05
+  int instr4[] = {0x1800, 0x8000, 0x0c00, 0x2010, 0x8000, 0, 0, 0}; //ld B, a8   0x06
+  int instr5[] = {0x1800, 0x8000, 0x0c00, 0x4100, 0x8000, 0, 0, 0}; //ld a8, A   0x07
+  int instr6[] = {0x1800, 0x8000, 0x0c00, 0x4080, 0x8000, 0, 0, 0}; //ld a8, B   0x08
+  int instr7[] = {0x1800, 0x8000, 0x0840, 0x8000, 0, 0, 0, 0}; //ld A, d8   0x09
+  int instr8[] = {0x1800, 0x8000, 0x0810, 0x8000, 0, 0, 0, 0}; //ld B, d8   0x0A
+  int instr9[] = {0x1800, 0x8000, 0x0840, 0x8000, 0x0c00, 0x4100, 0, 0}; //ld a8, d8  0x10
+  int instr10[] = {0x1800, 0x8000, 0x0240, 0, 0, 0, 0, 0}; //Add A, B  0x16
+  int instr11[] = {0x1800, 0x8000, 0x0260, 0, 0, 0, 0, 0}; //Sub A, B  0x17
+
+  int instruction_count = 0x18;
+  int* instruction_list[instruction_count] = {NULL, instr0, NULL, instr1, instr2, instr3, instr4, instr5, instr6, instr7, instr8, NULL, NULL, NULL, NULL, NULL, instr9, NULL, NULL, NULL, NULL, NULL, instr10, instr11};
+
+  for (int x = 0; x < instruction_count; x++) {
+    if (instruction_list[x] == NULL) {
+      continue;
+    }
+    if (mode) { // high byte eeprom
+      for (int i = 0; i < 8; i++) {
+        int data = instruction_list[x][i];
+        /*
+        Serial.print((i << 8) | x, HEX);
+        Serial.print(":  ");
+        Serial.println((data >> 8) & 0xFF, HEX);
+        */
+        writeEEPROM((i << 8) | x, (data >> 8) & 0xFF);
+      }
+    }else {     // low byte eeprom
+      for (int i = 0; i < 8; i++) {
+        int data = instruction_list[x][i];
+        /*
+        Serial.print((i << 8) | x, HEX);
+        Serial.print(":  ");
+        Serial.println(data & 0XFF, HEX);
+        */
+        writeEEPROM((i << 8) | x, data & 0xFF);
+      }
+    }
+  }
+  Serial.println("Microcode writing done");
+  printContents(0x2f);
+}
+
