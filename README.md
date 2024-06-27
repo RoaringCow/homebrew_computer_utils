@@ -3,7 +3,7 @@
 
 
 
-This is the computer that i built which was inspired by [Ben Eater][https://eater.net/]:
+This is the computer that i built which was inspired by [Ben Eater](https://eater.net/):
 I did some customizations on the design which was shaped by the parts that i could get or 
 
 # Specs:
