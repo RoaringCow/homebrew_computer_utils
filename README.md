@@ -21,4 +21,4 @@ I did some customizations on the design which was shaped by the parts that i cou
 - Clock speed adjusting with potantiometers
 
 
-![IMG_8756](https://github.com/RoaringCow/homebrew_computer_utils/assets/99341198/fddc9713-ea90-4bbd-b9d2-2e4dd6e442bb)
+!(https://github.com/RoaringCow/homebrew_computer_utils/assets/99341198/fddc9713-ea90-4bbd-b9d2-2e4dd6e442bb)
