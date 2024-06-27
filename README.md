@@ -4,7 +4,7 @@
 
 
 This is the computer that i built which was inspired by [Ben Eater](https://eater.net/):
-I did some customizations on the design which was shaped by the parts that i could get or just personal preferance 
+I did some customizations on the design which was shaped by the parts that i could get or just personal preference 
 
 # Specs:
 - 2 8-bit registers
