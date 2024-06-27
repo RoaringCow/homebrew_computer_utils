@@ -20,5 +20,4 @@ I did some customizations on the design which was shaped by the parts that i cou
 - Reset
 - Clock speed adjusting with potantiometers
 
-
-!(https://github.com/RoaringCow/homebrew_computer_utils/assets/99341198/fddc9713-ea90-4bbd-b9d2-2e4dd6e442bb)
+![IMG_8756](https://github.com/RoaringCow/homebrew_computer_utils/assets/99341198/fc0bc257-d57e-4bca-bc3e-434f92e09c50.png)
