@@ -12,7 +12,7 @@ I did some customizations on the design which was shaped by the parts that i cou
 - 8 bit memory
 - 15 bit program counter (8 bit word size for eeprom)
 - ALU supports only add and subtract
-- i dont know the clock speed (it currently has a chonk capacitor and it is slow)
+- i dont know the clock speed (it currently has a chonky capacitor and it is slow)
   
 # Todo Specs:
 - Flag Register
