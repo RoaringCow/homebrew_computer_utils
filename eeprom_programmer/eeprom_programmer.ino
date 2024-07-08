@@ -93,7 +93,7 @@ void printContents(int lines_to_print) {
   }
 }
 void check_reset() {
-  for (uint32_t x = 0; x < 0x8000; x++) {
+  for (uint32_t x = 0; x < 0x80; x++) {
     if (readEEPROM(x) != 0) {
       Serial.print("oh shit not good at:  ");
       Serial.println(x, HEX);
@@ -116,7 +116,15 @@ void unlock_eeprom() {
 }
 
 
-byte data[] = {0x9, 0x55, 0xa, 0x11};
+//byte data[] = {0x9, 0x55, 0xa, 0x11};
+//byte data[] = {0x9, 0x4, 0xa, 0x40, 0x16}; // add test
+//byte data[] = {0x9, 0x10, 0xa, 0x1, 0x11, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+byte data[] = {0x9, 0x10, 0x7, 0x2, 0x6, 0x2, 0x10, 0x55, 0x3, 0x6, 0x3}; // memtest
+//byte data[] = {0x9, 0x10, 0x7, 0x2, 0x9, 0x0, 0x5, 0x2};
+//byte data[] = {0x9, 0x10, 0xa, 0x1, 0x17}; // subtract test
+//byte data[] = {0x9, 0x0, 0xa, 0x1, 0x5, 0x0, 0x16, 0xa, 0x2, 0x7, 0x0, 0x9, 0x0, 0x11};   // jump_add
+
+
 void setup() {
   // put your setup code here, to run once:
   pinMode(SHIFT_DATA, OUTPUT);
@@ -130,10 +138,9 @@ void setup() {
         ; // Wait for the serial port to connect. Needed for native USB
     }
 
-/*
   // Erase entire EEPROM
   Serial.println("Erasing EEPROM");
-  for (uint32_t address = 0; address <= 0x7FFF; address += 1) {
+  for (uint32_t address = 0; address <= 0x00FF; address += 1) {
     writeEEPROM(address, 0x00);
 
     if (address % 0x8F == 0) {
@@ -144,6 +151,7 @@ void setup() {
   Serial.println(" done");
 
   check_reset();
+/*
   // Program data bytes
   Serial.print("Programming EEPROM");
   for (int address = 0; address < sizeof(data); address += 1) {
@@ -158,12 +166,19 @@ void setup() {
   // Read and print out the contents of the EERPROM
   Serial.println("Reading EEPROM");
   printContents();
+
+
   write_microcodes(false);
+
 */
-  writeEEPROM(0, 0x09);
-  writeEEPROM(1, 0x55);
-  writeEEPROM(2, 0x0a);
-  writeEEPROM(3, 0x11);
+  for(int x = 0; x < sizeof(data); x++) {
+    writeEEPROM(x, data[x]);
+    Serial.print(x, HEX);
+    Serial.print(":   ");
+    Serial.println(data[x], HEX);
+  }
+  printContents(0x50);
+
 
 
   Serial.println(" done");
@@ -204,11 +219,12 @@ void write_microcodes(bool mode){
   int instr7[] = {0x1800, 0x8000, 0x0840, 0x8000, 0, 0, 0, 0}; //ld A, d8   0x09
   int instr8[] = {0x1800, 0x8000, 0x0810, 0x8000, 0, 0, 0, 0}; //ld B, d8   0x0A
   int instr9[] = {0x1800, 0x8000, 0x0840, 0x8000, 0x0c00, 0x4100, 0, 0}; //ld a8, d8  0x10
-  int instr10[] = {0x1800, 0x8000, 0x0240, 0, 0, 0, 0, 0}; //Add A, B  0x16
-  int instr11[] = {0x1800, 0x8000, 0x0260, 0, 0, 0, 0, 0}; //Sub A, B  0x17
+  int instr10[] = {0x1800, 0x8000, 0x0004, 0x0008, 0, 0, 0, 0}; // ld PC, AB 0x11
+  int instr11[] = {0x1800, 0x8000, 0x0240, 0, 0, 0, 0, 0}; //Add A, B  0x16
+  int instr12[] = {0x1800, 0x8000, 0x0260, 0, 0, 0, 0, 0}; //Sub A, B  0x17
 
   int instruction_count = 0x18;
-  int* instruction_list[instruction_count] = {NULL, instr0, NULL, instr1, instr2, instr3, instr4, instr5, instr6, instr7, instr8, NULL, NULL, NULL, NULL, NULL, instr9, NULL, NULL, NULL, NULL, NULL, instr10, instr11};
+  int* instruction_list[instruction_count] = {NULL, instr0, NULL, instr1, instr2, instr3, instr4, instr5, instr6, instr7, instr8, NULL, NULL, NULL, NULL, NULL, instr9, instr10, NULL, NULL, NULL, NULL, instr11, instr12};
 
   for (int x = 0; x < instruction_count; x++) {
     if (instruction_list[x] == NULL) {

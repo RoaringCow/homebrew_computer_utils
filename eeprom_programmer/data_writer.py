@@ -25,7 +25,7 @@ def split_hex_in_file(array: list, mode: bool) -> list:
     
 
 def main():
-    write_microcode("microcode_data.bin", True)
+    write_microcode("microcode_data.bin", False)
 
     read_data("microcode_data.bin")
 
@@ -42,8 +42,9 @@ def write_microcode(file_address: str, mode: bool):
     instr7 = [0x1800, 0x8000, 0x0840, 0x8000, 0, 0, 0, 0] #ld A, d8   0x09
     instr8 = [0x1800, 0x8000, 0x0810, 0x8000, 0, 0, 0, 0] #ld B, d8   0x0A
     instr9 = [0x1800, 0x8000, 0x0840, 0x8000, 0x0c00, 0x4100, 0, 0] #ld a8, d8  0x10
-    instr10 = [0x1800, 0x8000, 0x0240, 0, 0, 0, 0, 0] #Add A, B  0x16
-    instr11 = [0x1800, 0x8000, 0x0260, 0, 0, 0, 0, 0] #Sub A, B  0x17
+    instr10 = [0x1800, 0x8000, 0x0008, 0, 0, 0, 0, 0]
+    instr11 = [0x1800, 0x8000, 0x0240, 0, 0, 0, 0, 0] #Add A, B  0x16
+    instr12 = [0x1800, 0x8000, 0x0260, 0, 0, 0, 0, 0] #Sub A, B  0x17
 
     for x in range(0, 0x1000):
         microcode_data[x * 8] = 0x1800
@@ -71,9 +72,11 @@ def write_microcode(file_address: str, mode: bool):
     for x in range(0, 8):
         microcode_data[0x10 + (x << 8)] = instr9[x];
     for x in range(0, 8):
-        microcode_data[0x16 + (x << 8)] = instr10[x];
+        microcode_data[0x11 + (x << 8)] = instr10[x];
     for x in range(0, 8):
-        microcode_data[0x17 + (x << 8)] = instr11[x];
+        microcode_data[0x16 + (x << 8)] = instr11[x];
+    for x in range(0, 8):
+        microcode_data[0x17 + (x << 8)] = instr12[x];
 
 
     print(hex(seperate_to_bytes(microcode_data, mode)[(0b1100000000) | 0x05]))

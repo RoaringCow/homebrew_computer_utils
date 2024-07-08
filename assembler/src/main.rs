@@ -60,6 +60,10 @@ fn main() {
                 let operand_one: String = parts[1].to_string().replace(",", "");
                 let operand_two: String = parts[2].to_string().replace(",", "");
                 
+                if operand_one == "PC".to_string() {
+                    binary.push(0x11);
+                    break;
+                }
 
                 let mut destination_str: Option<&str> = None;
                 let mut source_str: Option<&str> = None;

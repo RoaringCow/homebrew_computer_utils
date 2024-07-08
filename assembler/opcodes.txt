@@ -7,6 +7,7 @@ ld a8, B    ->  0x15
 ld A, d8    ->  0x16
 ld B, d8    ->  0x17
 ld a8, d8   ->  0x18
+ld PC, AB   ->  0x19
 
 Add A, B    ->  0x20
 Sub A, B    ->  0x30
